@@ -40,7 +40,17 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
-        
+        resetOTP: {
+            type: String
+        },
+        otpExpires: {
+            type: Date
+        },
+        isOTPVerified: {
+            type: Boolean,
+            default: false
+        }
+
     },
     {
         timestamps: true // Automatically adds 'createdAt' and 'updatedAt' fields

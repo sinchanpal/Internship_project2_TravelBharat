@@ -1,6 +1,7 @@
 import genToken from "../config/token.js";
 import bcrypt from "bcryptjs";
 import User from "../models/userModel.js";
+import sendMail from "../config/mail.js";
 
 
 //? Sign Up Controller
@@ -127,5 +128,80 @@ export const Signout = async (req, res) => {
 
     } catch (error) {
         return res.status(500).json({ message: "Error signing out user", error: error.message });
+    }
+}
+
+
+
+export const sendOTP = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({ message: "User not found with the provided email" });
+        }
+
+        // Generate a 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        user.resetOTP = otp;
+        user.otpExpires = Date.now() + 5 * 60 * 1000; // OTP expires in 5 minutes
+        user.isOTPVerified = false; // Reset OTP verification status
+
+        await user.save();
+
+        // Send the OTP to the user's email
+        await sendMail(email, otp);
+
+        return res.status(200).json({ message: "OTP sent to email successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: "Error sending OTP", error: error.message });
+    }
+}
+
+
+export const verifyOTP = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user || !user.resetOTP || user.resetOTP !== otp || user.otpExpires < Date.now()) {
+            return res.status(400).json({ message: "Invalid or expired OTP" });
+        }
+
+        user.isOTPVerified = true; // Mark OTP as verified
+        user.resetOTP = undefined; // Clear the OTP
+        user.otpExpires = undefined; // Clear the OTP expiration time
+
+        await user.save();
+
+        return res.status(200).json({ message: "OTP verified successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: "Error verifying OTP", error: error.message });
+    }
+}
+
+
+export const resetPassword = async (req, res) => {
+    try {
+        const { email, newPassword } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user || !user.isOTPVerified) {
+            return res.status(400).json({ message: "Invalid request. Please verify OTP first." });
+        }
+
+        // Hash the new password before saving to the database
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        user.password = hashedPassword;
+        user.isOTPVerified = false; // Reset OTP verification status after password reset
+
+        await user.save();
+
+        return res.status(200).json({ message: "Password reset successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: "Error resetting password", error: error.message });
     }
 }
