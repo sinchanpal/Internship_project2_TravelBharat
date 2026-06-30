@@ -7,11 +7,13 @@ import { LuArrowLeft, LuEye, LuEyeClosed } from "react-icons/lu";
 import travelBharatLogo_darkTheme from '../assets/TravelBharat_darkBG_img.png';
 import travelBharatLogo_whiteTheme from '../assets/TravelBharat_whitBG_img.png';
 import { PiLockOpenThin } from "react-icons/pi";
+import { useDispatch } from 'react-redux';
+import { setUserData } from '../redux/userSlice';
 
 
 const SignIn = () => {
     const navigate = useNavigate();
-    //const dispatch = useDispatch();
+    const dispatch = useDispatch();
 
     // Track focus for floating labels
     const [focused, setFocused] = useState({
@@ -49,7 +51,7 @@ const SignIn = () => {
                 email, password
             }, { withCredentials: true });
 
-            //dispatch(setUserData(result.data)); // Set the user data in Redux
+            dispatch(setUserData(result.data)); // Set the user data in Redux
             console.log("User signed in successfully:", result.data);
             navigate('/'); // Redirect after signin
 
@@ -149,11 +151,11 @@ const SignIn = () => {
                             disabled={loading}
                             onClick={handleSignin}
                         >
-                            {loading ? <ClipLoader color='white' size={25} /> : "Sign Up"}
+                            {loading ? <ClipLoader color='white' size={25} /> : "Sign In"}
                         </button>
 
                         <p className="text-gray-700 mt-5 text-sm">
-                            Already Have an Account? <Link to="/signin" className="text-green-600 hover:underline font-semibold">Sign In</Link>
+                            Don't Have an Account? <Link to="/signup" className="text-green-600 hover:underline font-semibold">Sign Up</Link>
                         </p>
                     </div>
                 </div>

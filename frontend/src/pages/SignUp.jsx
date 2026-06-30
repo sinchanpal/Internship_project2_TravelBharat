@@ -6,6 +6,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { LuArrowLeft, LuEye, LuEyeClosed } from "react-icons/lu";
 import { PiLockOpenThin } from "react-icons/pi";
 import travelBharatLogo_whiteTheme from '../assets/TravelBharat_whitBG_img.png';
+import { useDispatch } from 'react-redux';
+import { setUserData } from '../redux/userSlice';
 
 const SignUp = () => {
     const navigate = useNavigate();
@@ -25,6 +27,8 @@ const SignUp = () => {
     const [password, setPassword] = useState("");
     const [state, setState] = useState("");
     const [city, setCity] = useState("");
+
+    const dispatch = useDispatch();
 
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState("");
@@ -57,6 +61,7 @@ const SignUp = () => {
             );
 
             console.log("User signed up successfully:", result.data);
+            dispatch(setUserData(result.data));
             navigate('/');
 
         } catch (error) {
@@ -99,11 +104,10 @@ const SignUp = () => {
                     <div className='relative flex items-center w-full h-14 rounded-2xl border-2 border-gray-500 mb-6 focus-within:border-green-600 transition-colors'>
                         <label
                             htmlFor='name'
-                            className={`absolute left-4 px-1 bg-[#e6f8e9] transition-all duration-200 ${
-                                (focused.name || name)
+                            className={`absolute left-4 px-1 bg-[#e6f8e9] transition-all duration-200 ${(focused.name || name)
                                     ? "-top-3 text-xs sm:text-sm font-semibold text-green-600"
                                     : "top-3.5 text-gray-600 text-sm sm:text-base pointer-events-none"
-                            }`}
+                                }`}
                         >
                             Full Name
                         </label>
@@ -124,11 +128,10 @@ const SignUp = () => {
                     <div className='relative flex items-center w-full h-14 rounded-2xl border-2 border-gray-500 mb-6 focus-within:border-green-600 transition-colors'>
                         <label
                             htmlFor='email'
-                            className={`absolute left-4 px-1 bg-[#e6f8e9] transition-all duration-200 ${
-                                (focused.email || email)
+                            className={`absolute left-4 px-1 bg-[#e6f8e9] transition-all duration-200 ${(focused.email || email)
                                     ? "-top-3 text-xs sm:text-sm font-semibold text-green-600"
                                     : "top-3.5 text-gray-600 text-sm sm:text-base pointer-events-none"
-                            }`}
+                                }`}
                         >
                             Email Address
                         </label>
@@ -149,11 +152,10 @@ const SignUp = () => {
                     <div className='relative flex items-center w-full h-14 rounded-2xl border-2 border-gray-500 mb-6 focus-within:border-green-600 transition-colors'>
                         <label
                             htmlFor='password'
-                            className={`absolute left-4 px-1 bg-[#e6f8e9] transition-all duration-200 ${
-                                (focused.password || password)
+                            className={`absolute left-4 px-1 bg-[#e6f8e9] transition-all duration-200 ${(focused.password || password)
                                     ? "-top-3 text-xs sm:text-sm font-semibold text-green-600"
                                     : "top-3.5 text-gray-600 text-sm sm:text-base pointer-events-none"
-                            }`}
+                                }`}
                         >
                             Password (min. 6 characters)
                         </label>
@@ -186,11 +188,10 @@ const SignUp = () => {
                     <div className='relative flex items-center w-full h-14 rounded-2xl border-2 border-gray-500 mb-6 focus-within:border-green-600 transition-colors'>
                         <label
                             htmlFor='state'
-                            className={`absolute left-4 px-1 bg-[#e6f8e9] transition-all duration-200 ${
-                                (focused.state || state)
+                            className={`absolute left-4 px-1 bg-[#e6f8e9] transition-all duration-200 ${(focused.state || state)
                                     ? "-top-3 text-xs sm:text-sm font-semibold text-green-600"
                                     : "top-3.5 text-gray-600 text-sm sm:text-base pointer-events-none"
-                            }`}
+                                }`}
                         >
                             State (e.g. West Bengal)
                         </label>
@@ -211,11 +212,10 @@ const SignUp = () => {
                     <div className='relative flex items-center w-full h-14 rounded-2xl border-2 border-gray-500 mb-4 focus-within:border-green-600 transition-colors'>
                         <label
                             htmlFor='city'
-                            className={`absolute left-4 px-1 bg-[#e6f8e9] transition-all duration-200 ${
-                                (focused.city || city)
+                            className={`absolute left-4 px-1 bg-[#e6f8e9] transition-all duration-200 ${(focused.city || city)
                                     ? "-top-3 text-xs sm:text-sm font-semibold text-green-600"
                                     : "top-3.5 text-gray-600 text-sm sm:text-base pointer-events-none"
-                            }`}
+                                }`}
                         >
                             City
                         </label>

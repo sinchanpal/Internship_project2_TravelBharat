@@ -4,6 +4,8 @@ import cors from "cors";
 import cookieParser from 'cookie-parser';
 import connectDB from './config/db.js';
 import authRouter from './routes/authRoutes.js';
+import userRouter from './routes/userRoutes.js';
+import adminRouter from './routes/adminRoutes.js';
 
 dotenv.config();
 
@@ -23,10 +25,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); //Adding urlencoded allows your server to handle form data, which some testing tools and frontend libraries use by default.
 app.use(cookieParser());
 
-// Route
+
 
 // Routes
 app.use("/api/auth", authRouter); // Use the authRouter for routes starting with /api/auth
+app.use("/api/user", userRouter); // Use the userRouter for routes starting with /api/user
+app.use("/api/admin", adminRouter); // Use the adminRouter for routes starting with /api/admin
 
 
 app.listen(PORT, () => {
