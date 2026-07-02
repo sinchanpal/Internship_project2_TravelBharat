@@ -1,3 +1,4 @@
+import { uploadOnCloudinary } from "../config/cloudinary.js";
 import City from "../models/cityModel.js";
 import State from "../models/stateModel.js";
 import TouristPlace from "../models/touristplaceModel.js";
@@ -5,19 +6,33 @@ import TouristPlace from "../models/touristplaceModel.js";
 // ==========================================
 //  STATE MANAGEMENT
 // ==========================================
-
 export const addState = async (req, res) => {
     try {
-        const { name, description, coverImage } = req.body;
+        // Notice we no longer destructure coverImage from req.body
+        const { name, description } = req.body;
 
-        if (!name || !description || !coverImage) {
-            return res.status(400).json({ message: 'Please provide all required fields' });
+        if (!name || !description) {
+            return res.status(400).json({ message: 'Please provide all text fields' });
         }
 
+        // Check if Multer successfully attached the file to the request
+        if (!req.file) {
+            return res.status(400).json({ message: 'Cover image file is required' });
+        }
+
+        // Upload the local file to Cloudinary
+        const coverImageUrl = await uploadOnCloudinary(req.file.path);
+
+        //  Check if the upload was successful
+        if (!coverImageUrl) {
+            return res.status(500).json({ message: 'Failed to upload image to Cloudinary' });
+        }
+
+        // Create the state with the secure URL from Cloudinary
         const newState = await State.create({
             name,
             description,
-            coverImage
+            coverImage: coverImageUrl
         });
 
         res.status(201).json({
@@ -25,7 +40,6 @@ export const addState = async (req, res) => {
             state: newState
         });
     } catch (error) {
-        // Handle Mongoose duplicate key error (code 11000)
         if (error.code === 11000) {
             return res.status(400).json({ message: 'State already exists' });
         }
@@ -33,23 +47,40 @@ export const addState = async (req, res) => {
     }
 };
 
+
 // ==========================================
 //  CITY MANAGEMENT
 // ==========================================
 
+
+
 export const addCity = async (req, res) => {
     try {
-        const { name, state, description, coverImage } = req.body;
+        // 'state' here will be the MongoDB ObjectId sent from the frontend dropdown
+        const { name, state, description } = req.body;
 
-        if (!name || !state || !description || !coverImage) {
-            return res.status(400).json({ message: 'Please provide all required fields' });
+        if (!name || !state || !description) {
+            return res.status(400).json({ message: 'Please provide all text fields, including the state selection' });
         }
 
+        // Check if Multer attached the file
+        if (!req.file) {
+            return res.status(400).json({ message: 'Cover image file is required' });
+        }
+
+        // Upload to Cloudinary
+        const coverImageUrl = await uploadOnCloudinary(req.file.path);
+
+        if (!coverImageUrl) {
+            return res.status(500).json({ message: 'Failed to upload image to Cloudinary' });
+        }
+
+        // Create the city in the database
         const newCity = await City.create({
             name,
-            state, // This is the State ObjectId
+            state,
             description,
-            coverImage
+            coverImage: coverImageUrl
         });
 
         res.status(201).json({
@@ -70,13 +101,37 @@ export const addCity = async (req, res) => {
 
 export const addTouristPlace = async (req, res) => {
     try {
-        // Because the admin is adding this, we automatically set status to 'approved'
-        const placeData = { ...req.body, status: 'approved' };
+        const { name, state, city, category, description } = req.body;
 
-        const newPlace = await TouristPlace.create(placeData);
+        if (!name || !state || !city || !category || !description) {
+            return res.status(400).json({ message: 'Please provide all required fields' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ message: 'Cover image file is required' });
+        }
+
+        // Upload to Cloudinary
+        const coverImageUrl = await uploadOnCloudinary(req.file.path);
+
+        if (!coverImageUrl) {
+            return res.status(500).json({ message: 'Failed to upload image to Cloudinary' });
+        }
+
+        // Create the place in the database. 
+        // We hardcode status to 'approved' since an admin is adding it.
+        const newPlace = await TouristPlace.create({
+            name,
+            state,
+            city,
+            category,
+            description,
+            coverImage: coverImageUrl,
+            status: 'approved'
+        });
 
         res.status(201).json({
-            message: 'Tourist place added and approved successfully',
+            message: 'Tourist place added successfully',
             place: newPlace
         });
     } catch (error) {

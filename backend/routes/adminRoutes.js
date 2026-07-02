@@ -4,10 +4,11 @@ import { isAuth } from '../middlewares/isAuth.js';
 import {
     addState,
     addCity,
-    addTouristPlace,
     getPendingPlaces,
-    reviewPlaceSubmission
+    reviewPlaceSubmission,
+    addTouristPlace
 } from '../controllers/adminControllers.js';
+import { upload } from '../middlewares/multer.js';
 
 
 
@@ -18,9 +19,9 @@ const adminRouter = express.Router();
 // ==========================================
 
 // Create Core Entities
-adminRouter.post('/state', isAuth, isAdmin, addState);
-adminRouter.post('/city', isAuth, isAdmin, addCity);
-adminRouter.post('/place', isAuth, isAdmin, addTouristPlace);
+adminRouter.post('/state', isAuth, isAdmin, upload.single('coverImage'), addState);
+adminRouter.post('/city', isAuth, isAdmin, upload.single('coverImage'), addCity);
+adminRouter.post('/place', isAuth, isAdmin, upload.single('coverImage'), addTouristPlace);
 
 // Moderation Engine
 adminRouter.get('/places/pending', isAuth, isAdmin, getPendingPlaces);

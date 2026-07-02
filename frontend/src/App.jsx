@@ -10,9 +10,16 @@ import { ClipLoader } from 'react-spinners';
 import { useSelector } from 'react-redux';
 import useGetCurrentUser from './hooks/useGetCurrentUser';
 
-// Import your new layout components
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import AdminDashboard from './pages/adminPages/AdminDashboard';
+import AddState from './pages/adminPages/AddState';
+import AddCity from './pages/adminPages/AddCity';
+import StateDetails from './pages/StateDetails';
+import AddTouristPlace from './pages/adminPages/AddTouristPlace';
+import CityDetails from './pages/CityDetails';
+
+
 
 export const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000';
 
@@ -21,8 +28,6 @@ function App() {
   const { userData } = useSelector(state => state.user);
   const location = useLocation();
 
-  // Check if we are on an authentication page to optionally hide Navbar/Footer
-  // Many apps prefer clean auth pages without standard navigation
   const isAuthPage = ['/signin', '/signup', '/forgot-password'].includes(location.pathname);
 
   if (loading) {
@@ -34,26 +39,38 @@ function App() {
   }
 
   return (
-    // Added flex flex-col to enable sticky footers
     <div className="flex flex-col min-h-screen bg-[#DFE0EE]">
-
-      {/* Conditionally render Navbar so it doesn't clutter Sign In/Up pages */}
       {!isAuthPage && <Navbar />}
 
-      {/* Main content wrapper that pushes the footer down */}
       <main className="grow relative pb-14">
         <Routes>
-          {/* Note: I kept my auth requirements here. If I want unregistered users to read the encyclopedia, you can remove the ternary operator on the Home route later! */}
           <Route path='/' element={userData ? <Home /> : <Navigate to={'/signin'} />} />
           <Route path='/signup' element={!userData ? <SignUp /> : <Navigate to={'/'} />} />
           <Route path='/signin' element={!userData ? <SignIn /> : <Navigate to={'/'} />} />
           <Route path='/forgot-password' element={!userData ? <ForgotPassword /> : <Navigate to="/" />} />
+          <Route path='/state/:slug' element={userData ? <StateDetails /> : <Navigate to={'/signin'} />} />
+          <Route path='/city/:cityId' element={userData ? <CityDetails /> : <Navigate to={'/signin'} />} />
+
+          {/* === NEW ADMIN NESTED ROUTES === */}
+          <Route
+            path='/admin'
+            element={userData?.role === 'admin' ? <AdminDashboard /> : <Navigate to={'/'} />}
+          >
+            {/* If user visits /admin, automatically redirect them to /admin/add-state */}
+            <Route index element={<Navigate to="add-state" replace />} />
+
+            {/* This renders inside the <Outlet /> of AdminDashboard */}
+            <Route path='add-state' element={<AddState />} />
+            <Route path='add-city' element={<AddCity />} />
+            <Route path='add-place' element={<AddTouristPlace />} />
+            {/* Placeholders for tomorrow */}
+            {/* <Route path='add-place' element={<AddTouristPlace />} /> */}
+          </Route>
+
         </Routes>
       </main>
 
-      {/* Conditionally render Footer */}
       {!isAuthPage && <Footer />}
-
     </div>
   );
 }

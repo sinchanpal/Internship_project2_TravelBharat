@@ -6,6 +6,7 @@ import connectDB from './config/db.js';
 import authRouter from './routes/authRoutes.js';
 import userRouter from './routes/userRoutes.js';
 import adminRouter from './routes/adminRoutes.js';
+import exploreRouter from './routes/exploreRoutes.js';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRouter); // Use the authRouter for routes starting with /api/auth
 app.use("/api/user", userRouter); // Use the userRouter for routes starting with /api/user
 app.use("/api/admin", adminRouter); // Use the adminRouter for routes starting with /api/admin
+app.use('/api/explore', exploreRouter); // Use the exploreRouter for routes starting with /api/explore
 
 
 app.listen(PORT, () => {
