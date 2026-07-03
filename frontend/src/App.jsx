@@ -14,10 +14,9 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AdminDashboard from './pages/adminPages/AdminDashboard';
 import AddState from './pages/adminPages/AddState';
-import AddCity from './pages/adminPages/AddCity';
 import StateDetails from './pages/StateDetails';
 import AddTouristPlace from './pages/adminPages/AddTouristPlace';
-import CityDetails from './pages/CityDetails';
+import EditState from './pages/adminPages/EditState';
 
 
 
@@ -49,7 +48,7 @@ function App() {
           <Route path='/signin' element={!userData ? <SignIn /> : <Navigate to={'/'} />} />
           <Route path='/forgot-password' element={!userData ? <ForgotPassword /> : <Navigate to="/" />} />
           <Route path='/state/:slug' element={userData ? <StateDetails /> : <Navigate to={'/signin'} />} />
-          <Route path='/city/:cityId' element={userData ? <CityDetails /> : <Navigate to={'/signin'} />} />
+
 
           {/* === NEW ADMIN NESTED ROUTES === */}
           <Route
@@ -61,10 +60,9 @@ function App() {
 
             {/* This renders inside the <Outlet /> of AdminDashboard */}
             <Route path='add-state' element={<AddState />} />
-            <Route path='add-city' element={<AddCity />} />
             <Route path='add-place' element={<AddTouristPlace />} />
-            {/* Placeholders for tomorrow */}
-            {/* <Route path='add-place' element={<AddTouristPlace />} /> */}
+            <Route path='edit-state/:id' element={<EditState />} />
+
           </Route>
 
         </Routes>

@@ -1,12 +1,14 @@
 import express from 'express';
 import { isAuth } from '../middlewares/isAuth.js';
-import { getAllStates, getCitiesByStateId, getCityAndPlaces, getStateAndCities } from '../controllers/exploreController.js';
+import { getAllStates, getStateAndPlaces } from '../controllers/exploreController.js';
 
 const exploreRouter = express.Router();
 
+// Get all states for the homepage
 exploreRouter.get('/get-all-states', isAuth, getAllStates);
-exploreRouter.get('/state/:slug', isAuth, getStateAndCities);
-exploreRouter.get('/cities-by-state/:stateId', isAuth, getCitiesByStateId);
-exploreRouter.get('/places-by-city/:cityId', isAuth, getCityAndPlaces);
+
+// Get a specific state and all its tourist places by slug
+exploreRouter.get('/state/:slug', isAuth, getStateAndPlaces);
+
 
 export default exploreRouter;

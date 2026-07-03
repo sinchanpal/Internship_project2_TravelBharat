@@ -49,7 +49,11 @@ const TouristPlaceCard = ({ place }) => {
                 <h3 className="text-gray-900 text-xl font-bold tracking-tight mb-2 group-hover:text-green-600 transition-colors">
                     {place?.name}
                 </h3>
-                
+
+                <p className="text-gray-900 text-sm mb-2 font-semibold group-hover:text-orange-600 transition-colors">
+                    {place?.city}
+                </p>
+
                 <p className="text-gray-500 text-sm line-clamp-3">
                     {place?.description}
                 </p>

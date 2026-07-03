@@ -20,9 +20,9 @@ const touristPlaceSchema = new mongoose.Schema(
             required: [true, 'A tourist place must belong to a state'],
         },
         city: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'City',
-            required: [true, 'A tourist place must belong to a city'],
+            type: String,
+            required: [true, 'City or nearest town name is required'],
+            trim: true,
         },
         category: [
             {
@@ -80,8 +80,8 @@ const touristPlaceSchema = new mongoose.Schema(
     }
 );
 
-// Compound Index: Ensures a tourist place name is unique within its specific city
-touristPlaceSchema.index({ name: 1, city: 1 }, { unique: true });
+//Ensures a tourist place name is unique within its specific STATE
+touristPlaceSchema.index({ name: 1, state: 1 }, { unique: true });
 
 // Pre-save middleware to auto-generate the slug from the place name
 touristPlaceSchema.pre('validate', function () {
@@ -89,7 +89,7 @@ touristPlaceSchema.pre('validate', function () {
         // Creates a clean URL (e.g., "Tsongmo Lake" -> "tsongmo-lake")
         this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     }
-    
+
 });
 
 const TouristPlace = mongoose.model('TouristPlace', touristPlaceSchema);

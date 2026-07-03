@@ -3,10 +3,10 @@ import { isAdmin } from '../middlewares/isAdmin.js';
 import { isAuth } from '../middlewares/isAuth.js';
 import {
     addState,
-    addCity,
     getPendingPlaces,
     reviewPlaceSubmission,
-    addTouristPlace
+    addTouristPlace,
+    updateState
 } from '../controllers/adminControllers.js';
 import { upload } from '../middlewares/multer.js';
 
@@ -20,8 +20,10 @@ const adminRouter = express.Router();
 
 // Create Core Entities
 adminRouter.post('/state', isAuth, isAdmin, upload.single('coverImage'), addState);
-adminRouter.post('/city', isAuth, isAdmin, upload.single('coverImage'), addCity);
 adminRouter.post('/place', isAuth, isAdmin, upload.single('coverImage'), addTouristPlace);
+
+// Update Core Entities
+adminRouter.put('/state/:id', isAuth, isAdmin, upload.single('coverImage'), updateState);
 
 // Moderation Engine
 adminRouter.get('/places/pending', isAuth, isAdmin, getPendingPlaces);

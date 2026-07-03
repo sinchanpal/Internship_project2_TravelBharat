@@ -1,5 +1,4 @@
 import { uploadOnCloudinary } from "../config/cloudinary.js";
-import City from "../models/cityModel.js";
 import State from "../models/stateModel.js";
 import TouristPlace from "../models/touristplaceModel.js";
 
@@ -48,52 +47,50 @@ export const addState = async (req, res) => {
 };
 
 
-// ==========================================
-//  CITY MANAGEMENT
-// ==========================================
 
-
-
-export const addCity = async (req, res) => {
+export const updateState = async (req, res) => {
     try {
-        // 'state' here will be the MongoDB ObjectId sent from the frontend dropdown
-        const { name, state, description } = req.body;
+        const { id } = req.params;
+        const { name, description } = req.body;
 
-        if (!name || !state || !description) {
-            return res.status(400).json({ message: 'Please provide all text fields, including the state selection' });
+        // 1. Find the state we want to update
+        let state = await State.findById(id);
+        if (!state) {
+            return res.status(404).json({ message: 'State not found' });
         }
 
-        // Check if Multer attached the file
-        if (!req.file) {
-            return res.status(400).json({ message: 'Cover image file is required' });
+        // 2. Prepare the fields to update
+        const updateData = { name, description };
+
+        // 3. If the admin uploaded a new file, upload it and update the URL
+        if (req.file) {
+            const coverImageUrl = await uploadOnCloudinary(req.file.path);
+            if (!coverImageUrl) {
+                return res.status(500).json({ message: 'Failed to upload new image to Cloudinary' });
+            }
+            updateData.coverImage = coverImageUrl;
         }
 
-        // Upload to Cloudinary
-        const coverImageUrl = await uploadOnCloudinary(req.file.path);
+        // 4. Update the state in the database
+        const updatedState = await State.findByIdAndUpdate(
+            id, 
+            updateData, 
+            { new: true, runValidators: true } // Returns the updated document
+        );
 
-        if (!coverImageUrl) {
-            return res.status(500).json({ message: 'Failed to upload image to Cloudinary' });
-        }
-
-        // Create the city in the database
-        const newCity = await City.create({
-            name,
-            state,
-            description,
-            coverImage: coverImageUrl
-        });
-
-        res.status(201).json({
-            message: 'City added successfully',
-            city: newCity
+        res.status(200).json({
+            message: 'State updated successfully',
+            state: updatedState
         });
     } catch (error) {
         if (error.code === 11000) {
-            return res.status(400).json({ message: 'City already exists in this state' });
+            return res.status(400).json({ message: 'A state with this name already exists' });
         }
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
+
+
 
 // ==========================================
 //  TOURIST PLACE MANAGEMENT (Admin Direct Add)

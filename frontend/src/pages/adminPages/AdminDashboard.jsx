@@ -6,7 +6,6 @@ const AdminDashboard = () => {
     // We define our navigation items in an array for clean rendering
     const navItems = [
         { path: '/admin/add-state', label: 'Add State', icon: <LuMap size={20} /> },
-        { path: '/admin/add-city', label: 'Add City', icon: <LuBuilding2 size={20} /> },
         { path: '/admin/add-place', label: 'Add Tourist Place', icon: <LuMapPin size={20} /> },
     ];
 
