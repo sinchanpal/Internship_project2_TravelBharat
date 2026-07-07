@@ -6,7 +6,8 @@ import {
     getPendingPlaces,
     reviewPlaceSubmission,
     addTouristPlace,
-    updateState
+    updateState,
+    updateTouristPlace
 } from '../controllers/adminControllers.js';
 import { upload } from '../middlewares/multer.js';
 
@@ -24,6 +25,7 @@ adminRouter.post('/place', isAuth, isAdmin, upload.single('coverImage'), addTour
 
 // Update Core Entities
 adminRouter.put('/state/:id', isAuth, isAdmin, upload.single('coverImage'), updateState);
+adminRouter.put('/place/:id', isAuth, isAdmin, upload.single('coverImage'), updateTouristPlace);
 
 // Moderation Engine
 adminRouter.get('/places/pending', isAuth, isAdmin, getPendingPlaces);

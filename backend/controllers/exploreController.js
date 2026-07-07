@@ -26,22 +26,45 @@ export const getStateAndPlaces = async (req, res) => {
 
         // 1. Find the exact state using the slug from the URL
         const state = await State.findOne({ slug });
-        
+
         if (!state) {
             return res.status(404).json({ message: 'State not found' });
         }
 
         // 2. Find all approved tourist places linked to this state's ObjectId
         // We sort them alphabetically by name
-        const places = await TouristPlace.find({ 
+        const places = await TouristPlace.find({
             state: state._id,
-            status: 'approved' 
+            status: 'approved'
         }).sort({ name: 1 });
 
         res.status(200).json({
             success: true,
             state,
             places //  we are sending 'places' directly now!
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+
+// Fetch a single tourist place by its slug
+export const getTouristPlaceBySlug = async (req, res) => {
+    try {
+        const { slug } = req.params;
+
+        // Find the place and populate the state name so we can show it in the UI
+        const place = await TouristPlace.findOne({ slug, status: 'approved' })
+            .populate('state', 'name slug');
+
+        if (!place) {
+            return res.status(404).json({ message: 'Tourist place not found' });
+        }
+
+        res.status(200).json({
+            success: true,
+            place
         });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });

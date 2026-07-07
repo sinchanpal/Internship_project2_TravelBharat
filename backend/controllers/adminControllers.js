@@ -73,8 +73,8 @@ export const updateState = async (req, res) => {
 
         // 4. Update the state in the database
         const updatedState = await State.findByIdAndUpdate(
-            id, 
-            updateData, 
+            id,
+            updateData,
             { new: true, runValidators: true } // Returns the updated document
         );
 
@@ -98,9 +98,20 @@ export const updateState = async (req, res) => {
 
 export const addTouristPlace = async (req, res) => {
     try {
-        const { name, state, city, category, description } = req.body;
 
-        if (!name || !state || !city || !category || !description) {
+        const {
+            name,
+            state,
+            city,
+            category,
+            description,
+            bestTimeToVisit,
+            entryFeesAndTimings,
+            locationMapLink
+        } = req.body;
+
+
+        if (!name || !state || !city || !category || !description || !bestTimeToVisit || !entryFeesAndTimings || !locationMapLink) {
             return res.status(400).json({ message: 'Please provide all required fields' });
         }
 
@@ -108,21 +119,22 @@ export const addTouristPlace = async (req, res) => {
             return res.status(400).json({ message: 'Cover image file is required' });
         }
 
-        // Upload to Cloudinary
         const coverImageUrl = await uploadOnCloudinary(req.file.path);
 
         if (!coverImageUrl) {
             return res.status(500).json({ message: 'Failed to upload image to Cloudinary' });
         }
 
-        // Create the place in the database. 
-        // We hardcode status to 'approved' since an admin is adding it.
+
         const newPlace = await TouristPlace.create({
             name,
             state,
             city,
             category,
             description,
+            bestTimeToVisit,
+            entryFeesAndTimings,
+            locationMapLink,
             coverImage: coverImageUrl,
             status: 'approved'
         });
@@ -133,7 +145,56 @@ export const addTouristPlace = async (req, res) => {
         });
     } catch (error) {
         if (error.code === 11000) {
-            return res.status(400).json({ message: 'This tourist place already exists in this city' });
+            return res.status(400).json({ message: 'This tourist place already exists in this state' });
+        }
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+
+export const updateTouristPlace = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { 
+            name, state, city, category, description, 
+            bestTimeToVisit, entryFeesAndTimings, locationMapLink 
+        } = req.body;
+
+        // 1. Find the place
+        let place = await TouristPlace.findById(id);
+        if (!place) {
+            return res.status(404).json({ message: 'Tourist place not found' });
+        }
+
+        // 2. Prepare data for update
+        const updateData = {
+            name, state, city, category, description, 
+            bestTimeToVisit, entryFeesAndTimings, locationMapLink
+        };
+
+        // 3. If the admin uploaded a new cover image, update it
+        if (req.file) {
+            const coverImageUrl = await uploadOnCloudinary(req.file.path);
+            if (!coverImageUrl) {
+                return res.status(500).json({ message: 'Failed to upload new image to Cloudinary' });
+            }
+            updateData.coverImage = coverImageUrl;
+        }
+
+        // 4. Save updates to database
+        const updatedPlace = await TouristPlace.findByIdAndUpdate(
+            id, 
+            updateData, 
+            { new: true, runValidators: true }
+        );
+
+        res.status(200).json({
+            message: 'Tourist place updated successfully',
+            place: updatedPlace
+        });
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'A place with this name already exists in this state' });
         }
         res.status(500).json({ message: 'Server Error', error: error.message });
     }

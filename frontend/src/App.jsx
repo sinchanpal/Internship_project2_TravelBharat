@@ -17,6 +17,8 @@ import AddState from './pages/adminPages/AddState';
 import StateDetails from './pages/StateDetails';
 import AddTouristPlace from './pages/adminPages/AddTouristPlace';
 import EditState from './pages/adminPages/EditState';
+import PlaceDetails from './pages/PlaceDetails';
+import EditTouristPlace from './pages/adminPages/EditTouristPlace';
 
 
 
@@ -48,6 +50,7 @@ function App() {
           <Route path='/signin' element={!userData ? <SignIn /> : <Navigate to={'/'} />} />
           <Route path='/forgot-password' element={!userData ? <ForgotPassword /> : <Navigate to="/" />} />
           <Route path='/state/:slug' element={userData ? <StateDetails /> : <Navigate to={'/signin'} />} />
+          <Route path='/place/:slug' element={userData ? <PlaceDetails /> : <Navigate to={'/signin'} />} />
 
 
           {/* === NEW ADMIN NESTED ROUTES === */}
@@ -62,6 +65,7 @@ function App() {
             <Route path='add-state' element={<AddState />} />
             <Route path='add-place' element={<AddTouristPlace />} />
             <Route path='edit-state/:id' element={<EditState />} />
+            <Route path='edit-place/:slug' element={<EditTouristPlace />} />
 
           </Route>
 

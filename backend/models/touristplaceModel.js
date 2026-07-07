@@ -43,17 +43,17 @@ const touristPlaceSchema = new mongoose.Schema(
         },
         bestTimeToVisit: {
             type: String,
-            //required: [true, 'Best time to visit is required (e.g., October to March)'],
+            required: [true, 'Best time to visit is required (e.g., October to March)'],
             trim: true,
         },
         entryFeesAndTimings: {
             type: String,
-            //default: 'Free Entry | Open 24 Hours', // Default fallback
+            default: 'Free Entry | Open 24 Hours', // Default fallback
             trim: true,
         },
         locationMapLink: {
             type: String,
-            //required: [true, 'Google Maps link is required'],
+            required: [true, 'Google Maps link is required'],
             trim: true,
         },
         images: [
