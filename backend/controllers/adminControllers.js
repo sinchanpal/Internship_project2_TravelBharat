@@ -204,15 +204,17 @@ export const updateTouristPlace = async (req, res) => {
 //  MODERATION ENGINE (User Submissions)
 // ==========================================
 
-// Fetch all places waiting for admin review
+// Fetch all pending tourist places for the admin dashboard
 export const getPendingPlaces = async (req, res) => {
     try {
-        // Populate allows us to see the actual State and City names instead of just their IDs
+        // We populate 'createdBy' to see who submitted it, and 'state' to get the state name
         const pendingPlaces = await TouristPlace.find({ status: 'pending' })
+            .populate('createdBy', 'name email')
             .populate('state', 'name')
-            .populate('city', 'name');
+            .sort({ createdAt: -1 }); // Newest first
 
         res.status(200).json({
+            success: true,
             count: pendingPlaces.length,
             places: pendingPlaces
         });
@@ -221,31 +223,48 @@ export const getPendingPlaces = async (req, res) => {
     }
 };
 
-// Approve or Reject a user submission
-export const reviewPlaceSubmission = async (req, res) => {
+// Approve a pending tourist place
+export const approvePlace = async (req, res) => {
     try {
-        const { placeId } = req.params;
-        const { action } = req.body; // Expects 'approve' or 'reject'
-
-        if (!['approve', 'reject'].includes(action)) {
-            return res.status(400).json({ message: 'Invalid action. Use "approve" or "reject".' });
-        }
-
-        const newStatus = action === 'approve' ? 'approved' : 'rejected';
+        const { id } = req.params;
 
         const updatedPlace = await TouristPlace.findByIdAndUpdate(
-            placeId,
-            { status: newStatus },
-            { new: true } // Returns the updated document
+            id,
+            { status: 'approved' },
+            { new: true }
         );
 
         if (!updatedPlace) {
-            return res.status(404).json({ message: 'Tourist place not found' });
+            return res.status(404).json({ message: 'Place not found' });
         }
 
         res.status(200).json({
-            message: `Tourist place successfully ${newStatus}`,
+            success: true,
+            message: 'Destination approved and is now live on the website!',
             place: updatedPlace
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+// Reject (delete) a pending tourist place
+export const rejectPlace = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const deletedPlace = await TouristPlace.findByIdAndDelete(id);
+
+        if (!deletedPlace) {
+            return res.status(404).json({ message: 'Place not found' });
+        }
+
+        // Note: In a fully production-scaled app, you might also want to write logic here 
+        // to delete the associated image from Cloudinary to save storage space.
+
+        res.status(200).json({
+            success: true,
+            message: 'Destination submission rejected and deleted.'
         });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });

@@ -19,6 +19,8 @@ import AddTouristPlace from './pages/adminPages/AddTouristPlace';
 import EditState from './pages/adminPages/EditState';
 import PlaceDetails from './pages/PlaceDetails';
 import EditTouristPlace from './pages/adminPages/EditTouristPlace';
+import SubmitPlace from './pages/SubmitPlace';
+import PendingApprovals from './pages/adminPages/PendingApprovals';
 
 
 
@@ -51,9 +53,10 @@ function App() {
           <Route path='/forgot-password' element={!userData ? <ForgotPassword /> : <Navigate to="/" />} />
           <Route path='/state/:slug' element={userData ? <StateDetails /> : <Navigate to={'/signin'} />} />
           <Route path='/place/:slug' element={userData ? <PlaceDetails /> : <Navigate to={'/signin'} />} />
+          <Route path='/submit-place' element={userData ? <SubmitPlace /> : <Navigate to={'/signin'} />} />
 
 
-          {/* === NEW ADMIN NESTED ROUTES === */}
+          {/* ===  ADMIN NESTED ROUTES === */}
           <Route
             path='/admin'
             element={userData?.role === 'admin' ? <AdminDashboard /> : <Navigate to={'/'} />}
@@ -66,6 +69,7 @@ function App() {
             <Route path='add-place' element={<AddTouristPlace />} />
             <Route path='edit-state/:id' element={<EditState />} />
             <Route path='edit-place/:slug' element={<EditTouristPlace />} />
+            <Route path='pending-places' element={<PendingApprovals />} />
 
           </Route>
 

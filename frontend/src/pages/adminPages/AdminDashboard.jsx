@@ -1,12 +1,13 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LuMap, LuBuilding2, LuMapPin, LuLayoutDashboard } from 'react-icons/lu';
+import { LuMap, LuMapPin, LuLayoutDashboard, LuClipboardCheck } from 'react-icons/lu';
 
 const AdminDashboard = () => {
     // We define our navigation items in an array for clean rendering
     const navItems = [
         { path: '/admin/add-state', label: 'Add State', icon: <LuMap size={20} /> },
         { path: '/admin/add-place', label: 'Add Tourist Place', icon: <LuMapPin size={20} /> },
+        { path: '/admin/pending-places', label: 'Pending Approvals', icon: <LuClipboardCheck size={20} /> },
     ];
 
     return (
@@ -14,7 +15,6 @@ const AdminDashboard = () => {
 
             {/* Sidebar Navigation */}
             <aside className="w-full md:w-64 shrink-0">
-                {/* sticky keeps the sidebar in view if the form gets really long */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sticky top-24">
                     <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 px-2">
                         <LuLayoutDashboard className="text-green-600" />
@@ -27,7 +27,6 @@ const AdminDashboard = () => {
                             <NavLink
                                 key={item.path}
                                 to={item.path}
-                                // NavLink provides 'isActive' so we can highlight the currently selected tab
                                 className={({ isActive }) =>
                                     `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors whitespace-nowrap ${isActive
                                         ? 'bg-green-50 text-green-700 border border-green-100'
@@ -45,7 +44,7 @@ const AdminDashboard = () => {
 
             {/* Main Content Area */}
             <main className="flex-1 min-w-0">
-                {/* The Outlet is the magic placeholder where React Router injects our AddState, AddCity, etc. components */}
+                {/* The Outlet is the magic placeholder where React Router injects our AddState, AddPlace, and PendingApprovals components */}
                 <Outlet />
             </main>
 

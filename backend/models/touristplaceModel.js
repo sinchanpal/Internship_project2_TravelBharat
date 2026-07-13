@@ -73,7 +73,13 @@ const touristPlaceSchema = new mongoose.Schema(
             enum: ['pending', 'approved', 'rejected'],
             default: 'pending',
             required: true
+        },
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
         }
+
     },
     {
         timestamps: true,

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { LuMenu, LuX, LuUser, LuLogOut, LuShieldAlert } from "react-icons/lu";
+import { IoIosAddCircleOutline } from "react-icons/io";
 import { setUserData } from '../redux/userSlice';
 import axios from 'axios';
 import { serverUrl } from '../App';
@@ -35,11 +36,8 @@ const Navbar = () => {
                     {/* Left: Logo & Brand */}
                     <div className="flex items-center">
                         <Link to="/" className="shrink-0 flex items-center gap-2">
-                            {/* Replace with your actual logo image if you prefer */}
                             <span className="text-2xl font-bold text-gray-900 tracking-tight">
-
                                 <img src={travelBharatLogo_whiteTheme} alt="TravelBharat Logo" className="h-10 w-auto" />
-
                             </span>
                             <p className='text-green-700'>Travel<span className="text-orange-600">Bharat</span></p>
                         </Link>
@@ -63,14 +61,14 @@ const Navbar = () => {
                             // Logged IN State
                             <div className="flex items-center space-x-4">
 
-                                {/* Admin Button OR Contribute Button */}
+                                {/* Admin Dashboard OR Normal User Submit Button */}
                                 {userData.role === 'admin' ? (
                                     <Link to="/admin" className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
                                         <LuShieldAlert size={16} /> Dashboard
                                     </Link>
                                 ) : (
-                                    <Link to="/contribute" className="text-green-600 border border-green-600 hover:bg-green-50 text-sm font-medium px-4 py-2 rounded-xl transition-colors">
-                                        Contribute
+                                    <Link to="/submit-place" className="flex items-center gap-2 bg-linear-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-md transform hover:-translate-y-0.5">
+                                        <IoIosAddCircleOutline size={18} /> Submit Destination
                                     </Link>
                                 )}
 
@@ -81,7 +79,6 @@ const Navbar = () => {
                                         className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                                     >
                                         <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold">
-                                            {/* Display first letter of user's name */}
                                             {userData.name ? userData.name.charAt(0).toUpperCase() : <LuUser />}
                                         </div>
                                     </button>
@@ -143,11 +140,14 @@ const Navbar = () => {
                                     <div className="text-sm font-medium text-gray-500">{userData.email}</div>
                                 </div>
                             </div>
+                            
                             <div className="mt-3 space-y-1">
                                 {userData.role === 'admin' ? (
                                     <Link to="/admin" className="block px-4 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50">Admin Dashboard</Link>
                                 ) : (
-                                    <Link to="/contribute" className="block px-4 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50">Contribute a Place</Link>
+                                    <Link to="/submit-place" className="flex items-center justify-center gap-2 mx-4 my-2 px-4 py-3 text-base font-bold text-white bg-green-600 hover:bg-green-700 rounded-xl shadow-sm">
+                                        <LuPlusCircle size={20} /> Submit Destination
+                                    </Link>
                                 )}
                                 <Link to="/profile" className="block px-4 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50">Your Profile</Link>
                                 <button onClick={handleSignOut} className="block w-full text-left px-4 py-2 text-base font-medium text-red-600 hover:bg-red-50">Sign Out</button>

@@ -3,11 +3,12 @@ import { isAdmin } from '../middlewares/isAdmin.js';
 import { isAuth } from '../middlewares/isAuth.js';
 import {
     addState,
-    getPendingPlaces,
-    reviewPlaceSubmission,
     addTouristPlace,
     updateState,
-    updateTouristPlace
+    updateTouristPlace,
+    getPendingPlaces,
+    approvePlace,
+    rejectPlace
 } from '../controllers/adminControllers.js';
 import { upload } from '../middlewares/multer.js';
 
@@ -27,8 +28,10 @@ adminRouter.post('/place', isAuth, isAdmin, upload.single('coverImage'), addTour
 adminRouter.put('/state/:id', isAuth, isAdmin, upload.single('coverImage'), updateState);
 adminRouter.put('/place/:id', isAuth, isAdmin, upload.single('coverImage'), updateTouristPlace);
 
-// Moderation Engine
-adminRouter.get('/places/pending', isAuth, isAdmin, getPendingPlaces);
-adminRouter.put('/places/:placeId/review', isAuth, isAdmin, reviewPlaceSubmission);
+// Routes for the Contributor Approval Workflow
+adminRouter.get('/pending-places', isAuth, isAdmin, getPendingPlaces);
+adminRouter.put('/approve-place/:id', isAuth, isAdmin, approvePlace);
+adminRouter.delete('/reject-place/:id', isAuth, isAdmin, rejectPlace);
+
 
 export default adminRouter;
