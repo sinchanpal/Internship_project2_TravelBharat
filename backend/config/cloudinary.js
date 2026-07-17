@@ -33,3 +33,24 @@ export const uploadOnCloudinary = async (filePath) => {
         return null; // Return null so the controller knows it failed
     }
 };
+
+
+// Uploads an array of files simultaneously
+export const uploadMultipleOnCloudinary = async (filePathsArray) => {
+    try {
+        if (!filePathsArray || filePathsArray.length === 0) return [];
+
+        // We use Promise.all to upload all images at the exact same time, 
+        // making it much faster than uploading them one by one.
+        const uploadPromises = filePathsArray.map((path) => uploadOnCloudinary(path));
+
+        // Wait for all uploads to finish
+        const secureUrls = await Promise.all(uploadPromises);
+
+        // Filter out any null values just in case one specific image failed to upload
+        return secureUrls.filter((url) => url !== null);
+    } catch (error) {
+        console.error('Error in multiple upload:', error);
+        return [];
+    }
+};

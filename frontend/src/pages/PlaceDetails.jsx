@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { serverUrl } from '../App';
 import { ClipLoader } from 'react-spinners';
-import { LuArrowLeft, LuMapPin, LuCalendar, LuClock, LuMap, LuExternalLink, LuTags } from 'react-icons/lu';
+import { LuArrowLeft, LuMapPin, LuCalendar, LuClock, LuMap, LuExternalLink, LuTags, LuImage, LuNavigation } from 'react-icons/lu';
 
 const PlaceDetails = () => {
     const { slug } = useParams();
@@ -55,7 +55,7 @@ const PlaceDetails = () => {
                 <div className="relative z-10 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
                     <button
                         onClick={() => navigate(-1)}
-                        className="mb-6 flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-2 rounded-full w-fit text-sm font-medium"
+                        className="mb-6 flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-2 rounded-full w-fit text-sm font-medium shadow-sm"
                     >
                         <LuArrowLeft size={16} /> Back
                     </button>
@@ -80,8 +80,10 @@ const PlaceDetails = () => {
             <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-12">
                 <div className="flex flex-col lg:flex-row gap-10">
 
-                    {/* Left Column: The Story & Main Details (65%) */}
+                    {/* Left Column: The Story, Attractions & Gallery (65%) */}
                     <div className="w-full lg:w-2/3 space-y-10">
+                        
+                        {/* About Section */}
                         <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">About the Destination</h2>
                             <p className="text-gray-600 leading-relaxed text-lg whitespace-pre-wrap">
@@ -89,13 +91,53 @@ const PlaceDetails = () => {
                             </p>
                         </div>
 
-                        {/* Future Image Gallery Section */}
+                        {/* Nearby Attractions Section */}
+                        {place.nearbyAttractions && place.nearbyAttractions.length > 0 && (
+                            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                                    <LuNavigation className="text-green-500" /> Nearby Attractions
+                                </h2>
+                                <div className="flex flex-wrap gap-3">
+                                    {place.nearbyAttractions.map((attraction, index) => (
+                                        <span 
+                                            key={index} 
+                                            className="bg-green-50 hover:bg-green-100 transition-colors text-green-700 px-4 py-2 rounded-xl font-semibold text-sm border border-green-100 flex items-center gap-2 cursor-default"
+                                        >
+                                            <LuMapPin size={14} className="text-green-500" /> {attraction}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Image Gallery Section */}
                         {place.images && place.images.length > 0 && (
                             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-6">Gallery</h2>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                                        <LuImage className="text-green-500" /> Visual Journey
+                                    </h2>
+                                    <span className="text-sm font-medium text-gray-500">{place.images.length} Photos</span>
+                                </div>
+                                
+                                {/* Dynamic Grid based on image count */}
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {place.images.map((img, index) => (
-                                        <img key={index} src={img} alt="Gallery item" className="rounded-xl w-full h-48 object-cover" />
+                                        <div 
+                                            key={index} 
+                                            className={`relative rounded-2xl overflow-hidden group shadow-sm bg-gray-100
+                                                ${place.images.length === 1 ? 'col-span-2 md:col-span-3 h-80' : 'h-48 sm:h-56'} 
+                                                ${place.images.length === 2 ? 'col-span-1 md:col-span-1' : ''}
+                                            `}
+                                        >
+                                            <img 
+                                                src={img} 
+                                                alt={`${place.name} Gallery ${index + 1}`} 
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                                loading="lazy"
+                                            />
+                                            <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300"></div>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
@@ -109,7 +151,7 @@ const PlaceDetails = () => {
 
                             <div className="space-y-6">
                                 <div className="flex items-start gap-4">
-                                    <div className="bg-blue-50 p-3 rounded-2xl text-blue-600 mt-1">
+                                    <div className="bg-blue-50 p-3 rounded-2xl text-blue-600 mt-1 shrink-0">
                                         <LuCalendar size={24} />
                                     </div>
                                     <div>
@@ -119,7 +161,7 @@ const PlaceDetails = () => {
                                 </div>
 
                                 <div className="flex items-start gap-4">
-                                    <div className="bg-amber-50 p-3 rounded-2xl text-amber-600 mt-1">
+                                    <div className="bg-amber-50 p-3 rounded-2xl text-amber-600 mt-1 shrink-0">
                                         <LuClock size={24} />
                                     </div>
                                     <div>
@@ -129,7 +171,7 @@ const PlaceDetails = () => {
                                 </div>
 
                                 <div className="flex items-start gap-4">
-                                    <div className="bg-green-50 p-3 rounded-2xl text-green-600 mt-1">
+                                    <div className="bg-green-50 p-3 rounded-2xl text-green-600 mt-1 shrink-0">
                                         <LuMap size={24} />
                                     </div>
                                     <div className="w-full">
@@ -138,7 +180,7 @@ const PlaceDetails = () => {
                                             href={place.locationMapLink}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 w-full justify-center bg-gray-900 hover:bg-black text-white px-4 py-3 rounded-xl transition-colors font-semibold mt-2"
+                                            className="inline-flex items-center gap-2 w-full justify-center bg-gray-900 hover:bg-black text-white px-4 py-3 rounded-xl transition-colors font-semibold mt-2 shadow-sm"
                                         >
                                             View on Google Maps <LuExternalLink size={18} />
                                         </a>

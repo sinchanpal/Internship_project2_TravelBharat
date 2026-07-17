@@ -1,6 +1,6 @@
 import TouristPlace from "../models/touristplaceModel.js";
 import User from "../models/userModel.js";
-import { uploadOnCloudinary } from "../config/cloudinary.js";
+import { uploadMultipleOnCloudinary, uploadOnCloudinary } from "../config/cloudinary.js";
 
 
 
@@ -31,39 +31,47 @@ export const submitTouristPlace = async (req, res) => {
     try {
         const { 
             name, state, city, category, description, 
-            bestTimeToVisit, entryFeesAndTimings, locationMapLink 
+            bestTimeToVisit, entryFeesAndTimings, locationMapLink,
+            nearbyAttractions 
         } = req.body;
 
         const userId = req.userId;
 
-        // 1. Validate required fields
         if (!name || !state || !city || !category || !description || !bestTimeToVisit || !entryFeesAndTimings || !locationMapLink) {
             return res.status(400).json({ message: 'Please provide all required fields' });
         }
 
-        if (!req.file) {
+        if (!req.files || !req.files.coverImage) {
             return res.status(400).json({ message: 'Cover image file is required' });
         }
 
-        // 2. Upload image
-        const coverImageUrl = await uploadOnCloudinary(req.file.path);
+        const coverImageUrl = await uploadOnCloudinary(req.files.coverImage[0].path);
         if (!coverImageUrl) {
-            return res.status(500).json({ message: 'Failed to upload image to Cloudinary' });
+            return res.status(500).json({ message: 'Failed to upload cover image to Cloudinary' });
         }
 
-        // 3. Create the place with 'pending' status and attach the user's ID
+        // Upload Gallery Images
+        let galleryUrls = [];
+        if (req.files.images && req.files.images.length > 0) {
+            const imagePaths = req.files.images.map(file => file.path);
+            galleryUrls = await uploadMultipleOnCloudinary(imagePaths);
+        }
+
+        // Parse nearby attractions
+        let parsedAttractions = [];
+        if (nearbyAttractions) {
+            try { parsedAttractions = JSON.parse(nearbyAttractions); } 
+            catch (e) { parsedAttractions = [nearbyAttractions]; }
+        }
+
         const newPlace = await TouristPlace.create({
-            name,
-            state,
-            city,
-            category,
-            description,
-            bestTimeToVisit,
-            entryFeesAndTimings,
-            locationMapLink,
+            name, state, city, category, description,
+            bestTimeToVisit, entryFeesAndTimings, locationMapLink,
+            nearbyAttractions: parsedAttractions, // <-- NEW
             coverImage: coverImageUrl,
-            status: 'pending', // FORCED PENDING STATUS
-            createdBy: userId // The ID comes from your isAuth middleware
+            images: galleryUrls, // <-- NEW
+            status: 'pending',
+            createdBy: userId 
         });
 
         res.status(201).json({
@@ -71,9 +79,7 @@ export const submitTouristPlace = async (req, res) => {
             place: newPlace
         });
     } catch (error) {
-        if (error.code === 11000) {
-            return res.status(400).json({ message: 'This tourist place already exists in this state' });
-        }
+        if (error.code === 11000) return res.status(400).json({ message: 'This tourist place already exists in this state' });
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
