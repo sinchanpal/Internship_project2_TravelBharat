@@ -72,4 +72,65 @@ export const getTouristPlaceBySlug = async (req, res) => {
 };
 
 
+// Unified Search and Filter Controller
+export const searchAndFilter = async (req, res) => {
+    try {
+        const { q, category } = req.query;
+        
+        let matchedStates = [];
+        let matchedPlaces = [];
+
+        // Scenario 1: User clicked a "Browse by Interest" category button
+        if (category) {
+            matchedPlaces = await TouristPlace.find({ 
+                category: { $in: [new RegExp(`^${category}$`, 'i')] }, // Exact case-insensitive match
+                status: 'approved' 
+            })
+            .populate('state', 'name slug')
+            .sort({ name: 1 });
+            
+            return res.status(200).json({
+                success: true,
+                states: [],
+                places: matchedPlaces
+            });
+        }
+
+        // Scenario 2: User typed in the Hero Search Bar
+        if (q) {
+            const searchRegex = new RegExp(q, 'i'); // Case-insensitive search pattern
+
+            // Search States by name
+            matchedStates = await State.find({ 
+                name: { $regex: searchRegex } 
+            }).sort({ name: 1 });
+
+            // Search Tourist Places by name, city, or category
+            matchedPlaces = await TouristPlace.find({
+                $or: [
+                    { name: { $regex: searchRegex } },
+                    { city: { $regex: searchRegex } },
+                    { category: { $regex: searchRegex } }
+                ],
+                status: 'approved'
+            })
+            .populate('state', 'name slug')
+            .sort({ name: 1 });
+
+            return res.status(200).json({
+                success: true,
+                states: matchedStates,
+                places: matchedPlaces
+            });
+        }
+
+        // Fallback if no query parameters are provided
+        return res.status(200).json({ success: true, states: [], places: [] });
+
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+
 

@@ -21,6 +21,7 @@ import PlaceDetails from './pages/PlaceDetails';
 import EditTouristPlace from './pages/adminPages/EditTouristPlace';
 import SubmitPlace from './pages/SubmitPlace';
 import PendingApprovals from './pages/adminPages/PendingApprovals';
+import Explore from './pages/Explore';
 
 
 
@@ -54,6 +55,7 @@ function App() {
           <Route path='/state/:slug' element={userData ? <StateDetails /> : <Navigate to={'/signin'} />} />
           <Route path='/place/:slug' element={userData ? <PlaceDetails /> : <Navigate to={'/signin'} />} />
           <Route path='/submit-place' element={userData ? <SubmitPlace /> : <Navigate to={'/signin'} />} />
+          <Route path='/explore' element={userData ? <Explore /> : <Navigate to={'/signin'} />} />
 
 
           {/* ===  ADMIN NESTED ROUTES === */}
