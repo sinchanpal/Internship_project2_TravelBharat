@@ -3,7 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { serverUrl } from '../App';
 import { ClipLoader } from 'react-spinners';
-import { LuArrowLeft, LuMapPin, LuCalendar, LuClock, LuMap, LuExternalLink, LuTags, LuImage, LuNavigation } from 'react-icons/lu';
+import { 
+    LuArrowLeft, LuMapPin, LuCalendar, LuClock, LuMap, 
+    LuExternalLink, LuTags, LuImage, LuNavigation, LuStar, LuMessageSquare 
+} from 'react-icons/lu';
 
 const PlaceDetails = () => {
     const { slug } = useParams();
@@ -11,6 +14,12 @@ const PlaceDetails = () => {
 
     const [place, setPlace] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // New states for the Review/Comment system
+    const [rating, setRating] = useState(0);
+    const [hoverRating, setHoverRating] = useState(0);
+    const [comment, setComment] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         const fetchPlaceDetails = async () => {
@@ -30,6 +39,43 @@ const PlaceDetails = () => {
         fetchPlaceDetails();
     }, [slug, navigate]);
 
+    // Handler to submit the new rating and/or comment
+    const handleReviewSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (rating === 0 && comment.trim() === '') {
+            alert('Please provide either a rating or a comment before submitting.');
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const response = await axios.post(`${serverUrl}/api/explore/place/${place._id}/review`, 
+            { rating, comment }, 
+            { withCredentials: true }
+            );
+
+            if (response.data.success) {
+                // Update local state to show the new review immediately without refreshing
+                setPlace(prev => ({
+                    ...prev,
+                    reviews: response.data.reviews,
+                    averageRating: response.data.averageRating,
+                    numOfReviews: response.data.numOfReviews
+                }));
+                
+                // Clear the form
+                setRating(0);
+                setComment('');
+            }
+        } catch (error) {
+            console.error("Error submitting review:", error);
+            alert(error.response?.data?.message || 'Failed to post review. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="w-full min-h-[70vh] flex justify-center items-center">
@@ -39,6 +85,9 @@ const PlaceDetails = () => {
     }
 
     if (!place) return null;
+
+    // Sort reviews so the newest ones appear at the top
+    const sortedReviews = place.reviews ? [...place.reviews].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) : [];
 
     return (
         <div className="w-full min-h-screen bg-gray-50 flex flex-col pb-20">
@@ -55,7 +104,7 @@ const PlaceDetails = () => {
                 <div className="relative z-10 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
                     <button
                         onClick={() => navigate(-1)}
-                        className="mb-6 flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-2 rounded-full w-fit text-sm font-medium shadow-sm"
+                        className="mb-6 flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-2 rounded-full w-fit text-sm font-medium shadow-sm cursor-pointer"
                     >
                         <LuArrowLeft size={16} /> Back
                     </button>
@@ -80,7 +129,7 @@ const PlaceDetails = () => {
             <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-12">
                 <div className="flex flex-col lg:flex-row gap-10">
 
-                    {/* Left Column: The Story, Attractions & Gallery (65%) */}
+                    {/* Left Column: The Story, Attractions, Gallery & REVIEWS (65%) */}
                     <div className="w-full lg:w-2/3 space-y-10">
                         
                         {/* About Section */}
@@ -120,7 +169,6 @@ const PlaceDetails = () => {
                                     <span className="text-sm font-medium text-gray-500">{place.images.length} Photos</span>
                                 </div>
                                 
-                                {/* Dynamic Grid based on image count */}
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {place.images.map((img, index) => (
                                         <div 
@@ -142,12 +190,127 @@ const PlaceDetails = () => {
                                 </div>
                             </div>
                         )}
+
+                        {/*  Community Reviews & Comments Section */}
+                        <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                <LuMessageSquare className="text-green-500" /> Community Reviews
+                            </h2>
+                            <p className="text-gray-500 mb-8">Share your experience or tips about visiting {place.name}.</p>
+
+                            {/* Add Review Form */}
+                            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 mb-10">
+                                <h3 className="text-lg font-bold text-gray-800 mb-4">Leave a Review</h3>
+                                
+                                {/* Star Rating Input */}
+                                <div className="flex items-center gap-2 mb-4">
+                                    {[...Array(5)].map((_, index) => {
+                                        const starValue = index + 1;
+                                        return (
+                                            <button
+                                                key={starValue}
+                                                type="button"
+                                                onClick={() => setRating(starValue)}
+                                                onMouseEnter={() => setHoverRating(starValue)}
+                                                onMouseLeave={() => setHoverRating(0)}
+                                                className="focus:outline-none cursor-pointer transition-transform hover:scale-110"
+                                            >
+                                                <LuStar 
+                                                    size={28} 
+                                                    className={`${
+                                                        starValue <= (hoverRating || rating) 
+                                                        ? "text-yellow-400 fill-yellow-400" 
+                                                        : "text-gray-300"
+                                                    } transition-colors`}
+                                                />
+                                            </button>
+                                        );
+                                    })}
+                                    <span className="text-sm text-gray-500 ml-2">
+                                        {rating > 0 ? `${rating} out of 5 stars` : ''}
+                                    </span>
+                                </div>
+
+                                {/* Comment Textarea */}
+                                <textarea
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    placeholder="Write your comment or travel tips here..."
+                                    className="w-full bg-white border border-gray-200 rounded-xl p-4 text-gray-700 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all resize-none h-32 mb-4 shadow-sm"
+                                ></textarea>
+                                
+                                <button
+                                    onClick={handleReviewSubmit}
+                                    disabled={submitting}
+                                    className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
+                                >
+                                    {submitting ? 'Posting...' : 'Post Review'}
+                                </button>
+                            </div>
+
+                            {/* Display Previous Comments */}
+                            <div className="space-y-6">
+                                <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-4">
+                                    Recent Comments ({sortedReviews.length})
+                                </h3>
+                                
+                                {sortedReviews.length === 0 ? (
+                                    <p className="text-gray-500 italic py-4">No reviews yet. Be the first to share your experience!</p>
+                                ) : (
+                                    sortedReviews.map((review) => (
+                                        <div key={review._id} className="border-b border-gray-100 pb-6 last:border-0">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                {/* Profile Pic Placeholder or Image */}
+                                                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold uppercase shrink-0">
+                                                    {review.profilePic ? (
+                                                        <img src={review.profilePic} alt={review.name} className="w-full h-full rounded-full object-cover" />
+                                                    ) : (
+                                                        review.name.charAt(0)
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-gray-900">{review.name}</h4>
+                                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                        <span>{new Date(review.createdAt).toLocaleDateString()}</span>
+                                                        {review.rating && (
+                                                            <div className="flex items-center text-yellow-400">
+                                                                <LuStar size={12} className="fill-yellow-400" />
+                                                                <span className="ml-1 font-bold">{review.rating}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {review.comment && (
+                                                <p className="text-gray-700 ml-13 leading-relaxed">
+                                                    {review.comment}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Right Column: Sticky Essential Info Sidebar (35%) */}
                     <div className="w-full lg:w-1/3">
                         <div className="sticky top-24 bg-white p-8 rounded-3xl shadow-lg border border-gray-100 space-y-8">
                             <h3 className="text-xl font-bold text-gray-900 border-b border-gray-100 pb-4">Essential Information</h3>
+
+                            {/* Show Average Rating if it exists */}
+                            {place.averageRating > 0 && (
+                                <div className="flex items-center justify-between bg-yellow-50 p-4 rounded-2xl border border-yellow-100">
+                                    <div className="flex items-center gap-2">
+                                        <LuStar size={24} className="text-yellow-500 fill-yellow-500" />
+                                        <span className="font-extrabold text-xl text-yellow-700">{place.averageRating}</span>
+                                        <span className="text-yellow-600 font-medium text-sm">/ 5</span>
+                                    </div>
+                                    <span className="text-xs font-bold text-yellow-600 bg-yellow-100 px-3 py-1 rounded-full uppercase tracking-wider">
+                                        {place.numOfReviews} {place.numOfReviews === 1 ? 'Rating' : 'Ratings'}
+                                    </span>
+                                </div>
+                            )}
 
                             <div className="space-y-6">
                                 <div className="flex items-start gap-4">
@@ -180,7 +343,7 @@ const PlaceDetails = () => {
                                             href={place.locationMapLink}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 w-full justify-center bg-gray-900 hover:bg-black text-white px-4 py-3 rounded-xl transition-colors font-semibold mt-2 shadow-sm"
+                                            className="inline-flex items-center gap-2 w-full justify-center bg-gray-900 hover:bg-black text-white px-4 py-3 rounded-xl transition-colors font-semibold mt-2 shadow-sm cursor-pointer"
                                         >
                                             View on Google Maps <LuExternalLink size={18} />
                                         </a>

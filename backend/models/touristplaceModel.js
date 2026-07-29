@@ -1,5 +1,38 @@
 import mongoose from 'mongoose';
 
+
+//? Create a schema specifically for individual reviews ------------------------------------------
+const reviewSchema = new mongoose.Schema(
+    {
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        name: {
+            type: String,
+            required: true
+        },
+        profilePic: {
+            type: String, // Store profile picture if available
+            default: ''
+        },
+        rating: {
+            type: Number,
+            min: 1,
+            max: 5
+        },
+        comment: {
+            type: String,
+            trim: true
+
+        }
+    },
+    { timestamps: true } // Automatically adds the date the comment was posted
+);
+
+//?------------------------------------------------------------------------------------
+
 const touristPlaceSchema = new mongoose.Schema(
     {
         name: {
@@ -76,8 +109,16 @@ const touristPlaceSchema = new mongoose.Schema(
         },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-            required: true
+            ref: 'User'
+        },
+        reviews: [reviewSchema], // Embed the review schema here
+        averageRating: {
+            type: Number,
+            default: 0
+        },
+        numOfReviews: {
+            type: Number,
+            default: 0
         }
 
     },

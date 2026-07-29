@@ -1,6 +1,6 @@
 import express from 'express';
 import { isAuth } from '../middlewares/isAuth.js';
-import { getAllStates, getStateAndPlaces, getTouristPlaceBySlug, searchAndFilter } from '../controllers/exploreController.js';
+import { addReviewAndComment, getAllStates, getStateAndPlaces, getTouristPlaceBySlug, searchAndFilter } from '../controllers/exploreController.js';
 
 const exploreRouter = express.Router();
 
@@ -15,6 +15,9 @@ exploreRouter.get('/state/:slug', isAuth, getStateAndPlaces);
 
 // Get a specific tourist place by slug
 exploreRouter.get('/place/:slug', isAuth, getTouristPlaceBySlug);
+
+//Route to post a rating/comment
+exploreRouter.post('/place/:placeId/review', isAuth, addReviewAndComment);
 
 
 
