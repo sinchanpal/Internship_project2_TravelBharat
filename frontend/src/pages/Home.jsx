@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import HeroSection from '../components/HeroSection';
 import PopularStates from '../components/PopularStates';
+import FeaturedPlaces from '../components/FeaturedPlaces';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -41,30 +42,10 @@ const Home = () => {
                 </section>
 
                 {/* 3. Explore by State Grid */}
-                <PopularStates/>
-                
-                {/* 4. Placeholder: Featured Destinations */}
-                <section>
-                    <div className="mb-6">
-                        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                            Featured Tourist Spots
-                        </h2>
-                        <p className="text-gray-500 text-sm sm:text-base mt-1">
-                            Handpicked destinations with outstanding historical significance and natural views.
-                        </p>
-                    </div>
+                <PopularStates />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {[1, 2].map((item) => (
-                            <div
-                                key={item}
-                                className="h-64 bg-white rounded-2xl border border-gray-200 shadow-sm flex items-center justify-center text-gray-400 font-medium hover:shadow-md transition-shadow"
-                            >
-                                Destination Card Placeholder
-                            </div>
-                        ))}
-                    </div>
-                </section>
+                {/* 4. Placeholder: Featured Destinations */}
+                <FeaturedPlaces />
 
             </div>
         </div>

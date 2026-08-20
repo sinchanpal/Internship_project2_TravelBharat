@@ -203,6 +203,7 @@ const AddTouristPlace = () => {
                                     <option value="Nature">Nature</option>
                                     <option value="Adventure">Adventure</option>
                                     <option value="Religious">Religious</option>
+                                    <option value="Beach">Beach</option>
                                 </select>
                             </div>
                         </div>

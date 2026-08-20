@@ -3,10 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { serverUrl } from '../App';
 import { ClipLoader } from 'react-spinners';
-import { 
-    LuArrowLeft, LuMapPin, LuCalendar, LuClock, LuMap, 
-    LuExternalLink, LuTags, LuImage, LuNavigation, LuStar, LuMessageSquare 
+import {
+    LuArrowLeft, LuMapPin, LuCalendar, LuClock, LuMap,
+    LuExternalLink, LuTags, LuImage, LuNavigation, LuStar, LuMessageSquare,
+    LuCamera, LuX, LuTrash2
 } from 'react-icons/lu';
+import { useSelector } from 'react-redux';
 
 const PlaceDetails = () => {
     const { slug } = useParams();
@@ -15,11 +17,19 @@ const PlaceDetails = () => {
     const [place, setPlace] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // New states for the Review/Comment system
+    // States for the Review/Comment system
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    // NEW states for Image Upload
+    const [reviewImage, setReviewImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+
+
+    const { userData } = useSelector((state) => state.user);
+    const currentUserId = userData?._id;
 
     useEffect(() => {
         const fetchPlaceDetails = async () => {
@@ -39,40 +49,98 @@ const PlaceDetails = () => {
         fetchPlaceDetails();
     }, [slug, navigate]);
 
-    // Handler to submit the new rating and/or comment
+    // NEW: Handle image selection and create a preview
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Optional: Check file size (e.g., limit to 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert("Image size should be less than 5MB");
+                return;
+            }
+            setReviewImage(file);
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+    // NEW: Remove the selected image
+    const removeImage = () => {
+        setReviewImage(null);
+        setImagePreview(null);
+    };
+
+    // Handler to submit the new rating, comment, and/or image
     const handleReviewSubmit = async (e) => {
         e.preventDefault();
-        
-        if (rating === 0 && comment.trim() === '') {
-            alert('Please provide either a rating or a comment before submitting.');
+
+        // Validation updated to include the image
+        if (rating === 0 && comment.trim() === '' && !reviewImage) {
+            alert('Please provide a rating, a comment, or an image before submitting.');
             return;
         }
 
         setSubmitting(true);
         try {
-            const response = await axios.post(`${serverUrl}/api/explore/place/${place._id}/review`, 
-            { rating, comment }, 
-            { withCredentials: true }
+            // NEW: Use FormData because we might be sending a file
+            const formData = new FormData();
+            if (rating) formData.append('rating', rating);
+            if (comment) formData.append('comment', comment);
+            if (reviewImage) formData.append('reviewImage', reviewImage);
+
+            const response = await axios.post(
+                `${serverUrl}/api/explore/place/${place._id}/review`,
+                formData, // Send formData instead of JSON
+                {
+                    withCredentials: true,
+                    headers: { 'Content-Type': 'multipart/form-data' } // Required for files
+                }
             );
 
             if (response.data.success) {
-                // Update local state to show the new review immediately without refreshing
+                // Update local state to show the new review immediately
                 setPlace(prev => ({
                     ...prev,
                     reviews: response.data.reviews,
                     averageRating: response.data.averageRating,
                     numOfReviews: response.data.numOfReviews
                 }));
-                
+
                 // Clear the form
                 setRating(0);
                 setComment('');
+                setReviewImage(null);
+                setImagePreview(null);
             }
         } catch (error) {
             console.error("Error submitting review:", error);
             alert(error.response?.data?.message || 'Failed to post review. Please try again.');
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        const confirmDelete = window.confirm("Are you sure you want to delete your review?");
+        if (!confirmDelete) return;
+
+        try {
+            const response = await axios.delete(
+                `${serverUrl}/api/explore/place/${place._id}/review/${reviewId}`,
+                { withCredentials: true }
+            );
+
+            if (response.data.success) {
+                // Instantly update the UI with the recalculated ratings and filtered array
+                setPlace(prev => ({
+                    ...prev,
+                    reviews: response.data.reviews,
+                    averageRating: response.data.averageRating,
+                    numOfReviews: response.data.numOfReviews
+                }));
+            }
+        } catch (error) {
+            console.error("Error deleting review:", error);
+            alert(error.response?.data?.message || 'Failed to delete review.');
         }
     };
 
@@ -131,7 +199,7 @@ const PlaceDetails = () => {
 
                     {/* Left Column: The Story, Attractions, Gallery & REVIEWS (65%) */}
                     <div className="w-full lg:w-2/3 space-y-10">
-                        
+
                         {/* About Section */}
                         <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">About the Destination</h2>
@@ -148,8 +216,8 @@ const PlaceDetails = () => {
                                 </h2>
                                 <div className="flex flex-wrap gap-3">
                                     {place.nearbyAttractions.map((attraction, index) => (
-                                        <span 
-                                            key={index} 
+                                        <span
+                                            key={index}
                                             className="bg-green-50 hover:bg-green-100 transition-colors text-green-700 px-4 py-2 rounded-xl font-semibold text-sm border border-green-100 flex items-center gap-2 cursor-default"
                                         >
                                             <LuMapPin size={14} className="text-green-500" /> {attraction}
@@ -168,20 +236,20 @@ const PlaceDetails = () => {
                                     </h2>
                                     <span className="text-sm font-medium text-gray-500">{place.images.length} Photos</span>
                                 </div>
-                                
+
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {place.images.map((img, index) => (
-                                        <div 
-                                            key={index} 
+                                        <div
+                                            key={index}
                                             className={`relative rounded-2xl overflow-hidden group shadow-sm bg-gray-100
                                                 ${place.images.length === 1 ? 'col-span-2 md:col-span-3 h-80' : 'h-48 sm:h-56'} 
                                                 ${place.images.length === 2 ? 'col-span-1 md:col-span-1' : ''}
                                             `}
                                         >
-                                            <img 
-                                                src={img} 
-                                                alt={`${place.name} Gallery ${index + 1}`} 
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                            <img
+                                                src={img}
+                                                alt={`${place.name} Gallery ${index + 1}`}
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                                 loading="lazy"
                                             />
                                             <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300"></div>
@@ -201,7 +269,7 @@ const PlaceDetails = () => {
                             {/* Add Review Form */}
                             <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 mb-10">
                                 <h3 className="text-lg font-bold text-gray-800 mb-4">Leave a Review</h3>
-                                
+
                                 {/* Star Rating Input */}
                                 <div className="flex items-center gap-2 mb-4">
                                     {[...Array(5)].map((_, index) => {
@@ -215,13 +283,12 @@ const PlaceDetails = () => {
                                                 onMouseLeave={() => setHoverRating(0)}
                                                 className="focus:outline-none cursor-pointer transition-transform hover:scale-110"
                                             >
-                                                <LuStar 
-                                                    size={28} 
-                                                    className={`${
-                                                        starValue <= (hoverRating || rating) 
-                                                        ? "text-yellow-400 fill-yellow-400" 
+                                                <LuStar
+                                                    size={28}
+                                                    className={`${starValue <= (hoverRating || rating)
+                                                        ? "text-yellow-400 fill-yellow-400"
                                                         : "text-gray-300"
-                                                    } transition-colors`}
+                                                        } transition-colors`}
                                                 />
                                             </button>
                                         );
@@ -238,14 +305,50 @@ const PlaceDetails = () => {
                                     placeholder="Write your comment or travel tips here..."
                                     className="w-full bg-white border border-gray-200 rounded-xl p-4 text-gray-700 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all resize-none h-32 mb-4 shadow-sm"
                                 ></textarea>
-                                
-                                <button
-                                    onClick={handleReviewSubmit}
-                                    disabled={submitting}
-                                    className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
-                                >
-                                    {submitting ? 'Posting...' : 'Post Review'}
-                                </button>
+
+                                {/* NEW: Image Preview Box */}
+                                {imagePreview && (
+                                    <div className="relative inline-block mb-4">
+                                        <img src={imagePreview} alt="Review Preview" className="h-24 w-auto rounded-xl object-cover border border-gray-200 shadow-sm" />
+                                        <button
+                                            type="button"
+                                            onClick={removeImage}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-colors"
+                                            title="Remove Image"
+                                        >
+                                            <LuX size={14} />
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div className="flex items-center justify-between">
+                                    {/* NEW: Upload Image Button */}
+                                    <div>
+                                        <input
+                                            type="file"
+                                            id="reviewImageUpload"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleImageChange}
+                                        />
+                                        <label
+                                            htmlFor="reviewImageUpload"
+                                            className="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-green-600 font-medium px-4 py-2 bg-white border border-gray-200 hover:border-green-200 hover:bg-green-50 rounded-xl transition-all shadow-sm"
+                                        >
+                                            <LuCamera size={18} />
+                                            <span className="text-sm">Add Photo</span>
+                                        </label>
+                                    </div>
+
+                                    {/* Submit Button */}
+                                    <button
+                                        onClick={handleReviewSubmit}
+                                        disabled={submitting}
+                                        className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-semibold py-2.5 px-6 rounded-xl transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
+                                    >
+                                        {submitting ? 'Posting...' : 'Post Review'}
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Display Previous Comments */}
@@ -253,12 +356,26 @@ const PlaceDetails = () => {
                                 <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-4">
                                     Recent Comments ({sortedReviews.length})
                                 </h3>
-                                
+
                                 {sortedReviews.length === 0 ? (
                                     <p className="text-gray-500 italic py-4">No reviews yet. Be the first to share your experience!</p>
                                 ) : (
                                     sortedReviews.map((review) => (
-                                        <div key={review._id} className="border-b border-gray-100 pb-6 last:border-0">
+                                        <div key={review._id} className="border-b border-gray-100 pb-6 last:border-0 relative group">
+
+
+                                            {/* Conditional Delete Button */}
+                                            {review.user === currentUserId && (
+                                                <button
+                                                    onClick={() => handleDeleteReview(review._id)}
+                                                    className="absolute top-0 right-0 text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+                                                    title="Delete Comment"
+                                                >
+                                                    <LuTrash2 size={18} />
+                                                </button>
+                                            )}
+
+
                                             <div className="flex items-center gap-3 mb-2">
                                                 {/* Profile Pic Placeholder or Image */}
                                                 <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold uppercase shrink-0">
@@ -275,16 +392,28 @@ const PlaceDetails = () => {
                                                         {review.rating && (
                                                             <div className="flex items-center text-yellow-400">
                                                                 <LuStar size={12} className="fill-yellow-400" />
-                                                                <span className="ml-1 font-bold">{review.rating}</span>
+                                                                <span className="ml-1 font-bold text-yellow-600">{review.rating}</span>
                                                             </div>
                                                         )}
                                                     </div>
                                                 </div>
                                             </div>
+
                                             {review.comment && (
                                                 <p className="text-gray-700 ml-13 leading-relaxed">
                                                     {review.comment}
                                                 </p>
+                                            )}
+
+                                            {/* NEW: Render User Uploaded Image */}
+                                            {review.reviewImage && (
+                                                <div className="ml-13 mt-3">
+                                                    <img
+                                                        src={review.reviewImage}
+                                                        alt={`${review.name}'s photo`}
+                                                        className="h-32 sm:h-48 w-auto rounded-xl object-cover border border-gray-200 shadow-sm"
+                                                    />
+                                                </div>
                                             )}
                                         </div>
                                     ))

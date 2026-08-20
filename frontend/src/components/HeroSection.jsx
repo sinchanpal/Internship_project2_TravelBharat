@@ -78,7 +78,7 @@ const HeroSection = () => {
                 {/* Quick Suggestion Pills */}
                 <div className="mt-8 flex flex-wrap justify-center items-center gap-3 text-sm font-medium">
                     <span className="text-gray-200 shadow-sm mr-1">Popular:</span>
-                    {['Sikkim', 'Beaches', 'Rajasthan', 'Heritage'].map((tag, idx) => (
+                    {['Sikkim', 'Beach', 'Rajasthan', 'Heritage'].map((tag, idx) => (
                         <button
                             key={idx}
                             type="button"

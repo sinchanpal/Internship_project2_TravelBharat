@@ -49,6 +49,11 @@ const PopularStates = () => {
         );
     }
 
+    const handleDeletePlace = (deletedStateId) => {
+        setStates((prevStates) => prevStates.filter((state) => state._id !== deletedStateId));
+       
+    };
+
     return (
         <section className="relative w-full">
             <div className="flex justify-between items-end mb-6">
@@ -88,7 +93,7 @@ const PopularStates = () => {
                 {states.length > 0 ? (
                     states.map((state) => (
                         <div key={state._id} className="min-w-70 sm:min-w-[320px] shrink-0 snap-start">
-                            <StateCard state={state} />
+                            <StateCard state={state} onDeleteSuccess={handleDeletePlace}/>
                         </div>
                     ))
                 ) : (

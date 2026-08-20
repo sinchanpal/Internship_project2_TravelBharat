@@ -1,4 +1,5 @@
 
+import { uploadOnCloudinary } from "../config/cloudinary.js";
 import State from "../models/stateModel.js";
 import TouristPlace from "../models/touristplaceModel.js";
 import User from "../models/userModel.js";
@@ -140,12 +141,11 @@ export const addReviewAndComment = async (req, res) => {
     try {
         const { placeId } = req.params;
         const { rating, comment } = req.body;
-
         const userId = req.userId;
 
-        // 1. Validate that the user sent at least something
-        if (!rating && (!comment || comment.trim() === '')) {
-            return res.status(400).json({ message: 'Please provide either a rating or a comment.' });
+        // 1. Validate that the user sent at least something (rating, comment, OR an image)
+        if (!rating && (!comment || comment.trim() === '') && !req.file) {
+            return res.status(400).json({ message: 'Please provide a rating, a comment, or an image.' });
         }
 
         // 2. Fetch user to get their name and profile picture
@@ -156,28 +156,35 @@ export const addReviewAndComment = async (req, res) => {
         const place = await TouristPlace.findById(placeId);
         if (!place) return res.status(404).json({ message: 'Tourist place not found' });
 
-        // 4. Create the new review/comment object
+        // 4. Handle Cloudinary Image Upload
+        let reviewImageUrl = '';
+        if (req.file) {
+            reviewImageUrl = await uploadOnCloudinary(req.file.path);
+            if (!reviewImageUrl) {
+                return res.status(500).json({ message: 'Failed to upload image to Cloudinary' });
+            }
+        }
+
+        // 5. Create the new review/comment object
         const newReview = {
             user: userId,
             name: user.name,
             profilePic: user.profilePicture || '',
         };
 
-        // Only attach rating and comment if the user actually provided them
         if (rating) newReview.rating = Number(rating);
         if (comment) newReview.comment = comment.trim();
+        if (reviewImageUrl) newReview.reviewImage = reviewImageUrl; // <-- Attach secure URL
 
-        // 5. Add it to the array
+        // 6. Add it to the array
         place.reviews.push(newReview);
 
-        // 6. Recalculate Average Rating Safely
-        // We only want to count reviews that actually have a star rating attached
+        // 7. Recalculate Average Rating Safely
         const reviewsWithRatings = place.reviews.filter(r => r.rating);
         place.numOfReviews = reviewsWithRatings.length;
 
         if (place.numOfReviews > 0) {
             const totalRating = reviewsWithRatings.reduce((acc, item) => item.rating + acc, 0);
-            // Calculate average and round to 1 decimal place (e.g., 4.5)
             place.averageRating = Math.round((totalRating / place.numOfReviews) * 10) / 10;
         } else {
             place.averageRating = 0;
@@ -193,6 +200,76 @@ export const addReviewAndComment = async (req, res) => {
             numOfReviews: place.numOfReviews
         });
 
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+
+export const deleteReviewAndComment = async (req, res) => {
+    try {
+        const { placeId, reviewId } = req.params;
+        const userId = req.userId; // Provided by your isAuth middleware
+
+        // 1. Fetch the tourist place
+        const place = await TouristPlace.findById(placeId);
+        if (!place) return res.status(404).json({ message: 'Tourist place not found' });
+
+        // 2. Find the specific review
+        const reviewIndex = place.reviews.findIndex(r => r._id.toString() === reviewId);
+        if (reviewIndex === -1) {
+            return res.status(404).json({ message: 'Review not found' });
+        }
+
+        // 3. Verify the user requesting the deletion is the author of the review
+        if (place.reviews[reviewIndex].user.toString() !== userId) {
+            return res.status(403).json({ message: 'You are not authorized to delete this review.' });
+        }
+
+        // 4. Remove the review from the array
+        place.reviews.splice(reviewIndex, 1);
+
+        // 5. Recalculate Average Rating and Number of Reviews
+        const reviewsWithRatings = place.reviews.filter(r => r.rating);
+        place.numOfReviews = reviewsWithRatings.length;
+
+        if (place.numOfReviews > 0) {
+            const totalRating = reviewsWithRatings.reduce((acc, item) => item.rating + acc, 0);
+            place.averageRating = Math.round((totalRating / place.numOfReviews) * 10) / 10;
+        } else {
+            place.averageRating = 0; // Reset to 0 if no ratings are left
+        }
+
+        await place.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Review deleted successfully!',
+            reviews: place.reviews,
+            averageRating: place.averageRating,
+            numOfReviews: place.numOfReviews
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+
+
+// Fetch top 5 featured tourist spots based on average rating
+export const getFeaturedPlaces = async (req, res) => {
+    try {
+        // Find approved places, sort by rating (desc) and review count (desc), limit to 5
+        const featuredPlaces = await TouristPlace.find({ status: 'approved' })
+            .sort({ averageRating: -1, numOfReviews: -1 })
+            .limit(5)
+            .populate('state', 'name slug');
+
+        res.status(200).json({
+            success: true,
+            places: featuredPlaces
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }

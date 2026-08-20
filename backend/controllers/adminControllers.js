@@ -2,6 +2,9 @@ import { uploadMultipleOnCloudinary, uploadOnCloudinary } from "../config/cloudi
 import State from "../models/stateModel.js";
 import TouristPlace from "../models/touristplaceModel.js";
 
+
+//dasbzyq6a
+
 // ==========================================
 //  STATE MANAGEMENT
 // ==========================================
@@ -66,7 +69,7 @@ export const updateState = async (req, res) => {
         if (req.file) {
             const coverImageUrl = await uploadOnCloudinary(req.file.path);
             if (!coverImageUrl) {
-                return res.status(500).json({ message: 'Failed to upload new image to Cloudinary' });
+                return res.status(500).json({ message: 'Failed to upload new image to Cloudinary', coverImageUrl });
             }
             updateData.coverImage = coverImageUrl;
         }
@@ -93,6 +96,41 @@ export const updateState = async (req, res) => {
 
 
 // ==========================================
+//  DELETE STATE CONTROLLER
+// ==========================================
+export const deleteState = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Find the state
+        const state = await State.findById(id);
+        if (!state) {
+            return res.status(404).json({ message: 'State not found' });
+        }
+
+        // 2. Check if there are any tourist places attached to this state
+        const placesCount = await TouristPlace.countDocuments({ state: id });
+        if (placesCount > 0) {
+            return res.status(400).json({
+                message: `Cannot delete this state because it has ${placesCount} tourist place(s) attached to it. Please delete or reassign those places first.`
+            });
+        }
+
+        // 3. Delete the state
+        await State.findByIdAndDelete(id);
+
+        res.status(200).json({
+            success: true,
+            message: 'State deleted successfully'
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+
+
+// ==========================================
 //  TOURIST PLACE MANAGEMENT (Admin Direct Add)
 // ==========================================
 
@@ -101,7 +139,7 @@ export const addTouristPlace = async (req, res) => {
         const {
             name, state, city, category, description,
             bestTimeToVisit, entryFeesAndTimings, locationMapLink,
-            nearbyAttractions 
+            nearbyAttractions
         } = req.body;
 
         if (!name || !state || !city || !category || !description || !bestTimeToVisit || !entryFeesAndTimings || !locationMapLink) {
@@ -153,10 +191,10 @@ export const addTouristPlace = async (req, res) => {
 export const updateTouristPlace = async (req, res) => {
     try {
         const { id } = req.params;
-        const { 
-            name, state, city, category, description, 
+        const {
+            name, state, city, category, description,
             bestTimeToVisit, entryFeesAndTimings, locationMapLink,
-            nearbyAttractions 
+            nearbyAttractions
         } = req.body;
 
         let place = await TouristPlace.findById(id);
@@ -165,12 +203,12 @@ export const updateTouristPlace = async (req, res) => {
         // Parse nearby attractions safely
         let parsedAttractions = place.nearbyAttractions; // Default to what is already in DB
         if (nearbyAttractions) {
-            try { parsedAttractions = JSON.parse(nearbyAttractions); } 
+            try { parsedAttractions = JSON.parse(nearbyAttractions); }
             catch (e) { parsedAttractions = [nearbyAttractions]; }
         }
 
         const updateData = {
-            name, state, city, category, description, 
+            name, state, city, category, description,
             bestTimeToVisit, entryFeesAndTimings, locationMapLink,
             nearbyAttractions: parsedAttractions // <-- NEW
         };
@@ -192,6 +230,30 @@ export const updateTouristPlace = async (req, res) => {
         res.status(200).json({ message: 'Tourist place updated successfully', place: updatedPlace });
     } catch (error) {
         if (error.code === 11000) return res.status(400).json({ message: 'A place with this name already exists in this state' });
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+
+
+export const deleteTouristPlace = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Find and delete the tourist place
+        const deletedPlace = await TouristPlace.findByIdAndDelete(id);
+
+        if (!deletedPlace) {
+            return res.status(404).json({ message: 'Tourist place not found' });
+        }
+
+        
+
+        res.status(200).json({
+            success: true,
+            message: 'Tourist place deleted successfully'
+        });
+    } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };

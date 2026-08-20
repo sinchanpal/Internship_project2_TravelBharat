@@ -1,16 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LuMapPin, LuTags, LuPencil } from "react-icons/lu";
-import { useSelector } from 'react-redux'; // <-- Import this
+import { useSelector } from 'react-redux';
+import axios from 'axios';
+import { serverUrl } from '../App';
+import toast from 'react-hot-toast';
+import { LuMapPin } from "react-icons/lu";
+import { LuTags } from "react-icons/lu";
+import { LuPencil } from "react-icons/lu";
+import { LuTrash2 } from "react-icons/lu";
+import { LuSettings } from "react-icons/lu";
 
-const TouristPlaceCard = ({ place }) => {
+const TouristPlaceCard = ({ place, onDeleteSuccess }) => {
     const navigate = useNavigate();
-    // <-- Get user data
     const { userData } = useSelector((state) => state.user);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef(null);
+
+   
+    
     const fallbackImage = "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=1200&auto=format&fit=crop";
 
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     const getCategoryColor = (category) => {
-        // ... (Keep your existing color switch statement)
         switch (category) {
             case 'Heritage': return 'bg-amber-100 text-amber-700 border-amber-200';
             case 'Nature': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
@@ -20,11 +41,33 @@ const TouristPlaceCard = ({ place }) => {
         }
     };
 
-    // <-- Add this function
     const handleEditClick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        setMenuOpen(false);
         navigate(`/admin/edit-place/${place.slug}`);
+    };
+
+    const handleDeleteClick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setMenuOpen(false);
+
+        if (window.confirm(`Are you sure you want to delete ${place.name}?`)) {
+            try {
+                const response = await axios.delete(`${serverUrl}/api/admin/place/${place._id}`, {
+                    withCredentials: true
+                });
+
+                if (response.data.success) {
+                    toast.success(response.data.message);
+                    if (onDeleteSuccess) onDeleteSuccess(place._id);
+                }
+            } catch (error) {
+                console.error("Delete error:", error);
+                toast.error(error.response?.data?.message || "Failed to delete tourist place");
+            }
+        }
     };
 
     return (
@@ -40,15 +83,39 @@ const TouristPlaceCard = ({ place }) => {
                     onError={(e) => { e.target.src = fallbackImage }}
                 />
 
-                {/* CONDITIONAL ADMIN EDIT BUTTON */}
+                {/* CONDITIONAL ADMIN SETTINGS MENU */}
                 {userData?.role === 'admin' && (
-                    <button
-                        onClick={handleEditClick}
-                        className="absolute top-4 left-4 z-20 bg-amber-500 hover:bg-amber-600 text-white p-2.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0"
-                        title="Edit Destination"
-                    >
-                        <LuPencil size={16} />
-                    </button>
+                    <div className="absolute top-4 left-4 z-30" ref={menuRef}>
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setMenuOpen(!menuOpen);
+                            }}
+                            className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all duration-200"
+                            title="Admin Settings"
+                        >
+                            <LuSettings size={18} />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {menuOpen && (
+                            <div className="absolute left-0 mt-2 w-36 bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100 py-1 z-40">
+                                <button
+                                    onClick={handleEditClick}
+                                    className="w-full text-left px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                >
+                                    <LuPencil size={14} className="text-amber-500" /> Edit Place
+                                </button>
+                                <button
+                                    onClick={handleDeleteClick}
+                                    className="w-full text-left px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                >
+                                    <LuTrash2 size={14} /> Delete Place
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 <div className="absolute top-4 right-4 z-10">

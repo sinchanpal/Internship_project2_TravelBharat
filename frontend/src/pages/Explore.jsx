@@ -4,6 +4,7 @@ import axios from 'axios';
 import { serverUrl } from '../App';
 import { ClipLoader } from 'react-spinners';
 import { LuMapPin, LuArrowRight, LuSearchX } from 'react-icons/lu';
+import InteractiveStateMap from '../components/InteractiveStateMap';
 
 const Explore = () => {
     const [searchParams] = useSearchParams();
@@ -73,15 +74,20 @@ const Explore = () => {
                     </button>
                 </div>
 
+
+                <InteractiveStateMap
+                    onSelectState={(slug) => navigate(`/state/${slug}`)}
+                />
+
                 {loading ? (
                     <div className="w-full h-[50vh] flex justify-center items-center">
                         <ClipLoader color="#16a34a" size={50} />
                     </div>
                 ) : (
-                    <div className="space-y-12">
+                    <div className="mt-5 space-y-12">
 
                         {/* Empty State */}
-                        {states.length === 0 && places.length === 0 && (
+                        {/* {states.length === 0 && places.length === 0 && (
                             <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm flex flex-col items-center">
                                 <LuSearchX className="text-gray-300 w-24 h-24 mb-4" />
                                 <h3 className="text-2xl font-bold text-gray-800 mb-2">No destinations found</h3>
@@ -89,7 +95,7 @@ const Explore = () => {
                                     We couldn't find any states or places matching your search. Try using different keywords or browsing our categories.
                                 </p>
                             </div>
-                        )}
+                        )} */}
 
                         {/* States Results */}
                         {states.length > 0 && (

@@ -72,6 +72,11 @@ const StateDetails = () => {
 
     if (!stateData) return null;
 
+    const handleDeletePlace = (deletedPlaceId) => {
+        setPlaces((prevPlaces) => prevPlaces.filter((place) => place._id !== deletedPlaceId));
+        setFilteredPlaces((prevFiltered) => prevFiltered.filter((place) => place._id !== deletedPlaceId));
+    };
+
     return (
         <div className="w-full min-h-screen bg-gray-50 flex flex-col">
 
@@ -151,7 +156,7 @@ const StateDetails = () => {
                 {filteredPlaces.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                         {filteredPlaces.map((place) => (
-                            <TouristPlaceCard key={place._id} place={place} />
+                            <TouristPlaceCard key={place._id} place={place} onDeleteSuccess={handleDeletePlace}/>
                         ))}
                     </div>
                 ) : (

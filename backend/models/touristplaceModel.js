@@ -26,6 +26,10 @@ const reviewSchema = new mongoose.Schema(
             type: String,
             trim: true
 
+        },
+        reviewImage: {         
+            type: String,
+            default: ''
         }
     },
     { timestamps: true } // Automatically adds the date the comment was posted
@@ -60,7 +64,7 @@ const touristPlaceSchema = new mongoose.Schema(
         category: [
             {
                 type: String,
-                enum: ['Heritage', 'Nature', 'Adventure', 'Religious'],
+                enum: ['Heritage', 'Nature', 'Adventure', 'Religious', 'Beach'],
                 required: [true, 'At least one category must be selected']
             }
         ],

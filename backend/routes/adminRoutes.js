@@ -8,7 +8,9 @@ import {
     updateTouristPlace,
     getPendingPlaces,
     approvePlace,
-    rejectPlace
+    rejectPlace,
+    deleteState,
+    deleteTouristPlace
 } from '../controllers/adminControllers.js';
 import { upload } from '../middlewares/multer.js';
 
@@ -33,6 +35,11 @@ adminRouter.put('/place/:id', isAuth, isAdmin, upload.fields([
     { name: 'coverImage', maxCount: 1 },
     { name: 'images', maxCount: 5 }
 ]), updateTouristPlace);
+
+
+// Delete Core Entities 
+adminRouter.delete('/state/:id', isAuth, isAdmin, deleteState);
+adminRouter.delete('/place/:id', isAuth, isAdmin, deleteTouristPlace);
 
 // Routes for the Contributor Approval Workflow
 adminRouter.get('/pending-places', isAuth, isAdmin, getPendingPlaces);
