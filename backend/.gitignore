@@ -6,3 +6,11 @@ node_modules/
 
 # Mac system files (just in case)
 .DS_Store
+
+
+
+# data folder
+data/
+
+#seed.js file
+seed.js
