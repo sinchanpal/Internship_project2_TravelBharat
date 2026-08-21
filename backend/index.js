@@ -18,7 +18,8 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors({
     origin: [
-        "http://localhost:5173"
+        "http://localhost:5173",
+        process.env.FRONTEND_URL
     ], // Allow requests from this origin (your frontend)
     credentials: true // Allow cookies to be sent in cross-origin requests
 }));
@@ -39,10 +40,6 @@ app.listen(PORT, () => {
     connectDB(); // Connect to MongoDB when the server starts
     console.log(`Server is running on port ${PORT}`);
 });
-
-
-
-
 
 
 

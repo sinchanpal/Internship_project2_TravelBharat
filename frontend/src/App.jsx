@@ -25,8 +25,8 @@ import Explore from './pages/Explore';
 
 
 
-export const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000';
-
+export const serverUrl = import.meta.env.VITE_SERVER_URL;
+//'http://localhost:8000' this is for local development, but in production, it will use rendered backend URL from environment variable.
 function App() {
   const loading = useGetCurrentUser();
   const { userData } = useSelector(state => state.user);
